@@ -10,10 +10,10 @@ import (
 )
 
 type CategoryController struct {
-	categoryService services.CategoryService
+	categoryService *services.CategoryService
 }
 
-func NewCategoryController(categoryService services.CategoryService) *CategoryController {
+func NewCategoryController(categoryService *services.CategoryService) *CategoryController {
 	return &CategoryController{
 		categoryService: categoryService,
 	}
@@ -141,7 +141,7 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 		return
 	}
 
-	var category models.BatteryCategory
+	var category models.UpdateCategoryRequest
 	if err := c.ShouldBindJSON(&category); err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeBadRequest,
@@ -150,8 +150,19 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 		return
 	}
 
-	category.ID = uint(id)
-	if err := ctrl.categoryService.Update(&category); err != nil {
+	// 构建更新字段映射
+	updates := make(map[string]interface{})
+	if category.Name != "" {
+		updates["name"] = category.Name
+	}
+	if category.Description != "" {
+		updates["description"] = category.Description
+	}
+	if category.UnitPrice > 0 {
+		updates["unit_price"] = category.UnitPrice
+	}
+
+	if err := ctrl.categoryService.UpdateCategory(uint(id), updates); err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeInternalError,
 			Msg:  err.Error(),

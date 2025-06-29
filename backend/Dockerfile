@@ -10,6 +10,8 @@ ENV GOPROXY=https://goproxy.cn,direct
 COPY go.mod go.sum ./
 RUN go mod download
 
+ENV GIN_MODE=release
+
 # Copy source code
 COPY . .
 

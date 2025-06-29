@@ -10,10 +10,10 @@ import (
 )
 
 type InboundController struct {
-	inboundService services.InboundService
+	inboundService *services.InboundService
 }
 
-func NewInboundController(inboundService services.InboundService) *InboundController {
+func NewInboundController(inboundService *services.InboundService) *InboundController {
 	return &InboundController{
 		inboundService: inboundService,
 	}
@@ -21,21 +21,36 @@ func NewInboundController(inboundService services.InboundService) *InboundContro
 
 // GetAll godoc
 // @Summary      获取所有入库订单
-// @Description  分页获取入库订单列表
+// @Description  分页获取入库订单列表，支持按供应商和日期筛选
 // @Tags         入库管理
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        limit query int false "每页数量" default(20)
-// @Param        offset query int false "偏移量" default(0)
-// @Success      200 {object} models.Response{data=object{orders=[]models.InboundOrder,total=int,limit=int,offset=int}} "获取成功"
+// @Param        req body models.GetInboundOrderRequest true "入库订单请求"
+// @Success      200 {object} models.Response{data=models.GetInboundOrderResponse} "获取成功"
 // @Failure      200 {object} models.Response "获取失败"
 // @Router       /inbound/orders [get]
 func (ctrl *InboundController) GetAll(c *gin.Context) {
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	var req models.GetInboundOrderRequest
 
-	orders, total, err := ctrl.inboundService.GetAll(limit, offset)
+	// 从查询参数绑定
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, &models.Response{
+			Code: models.CodeBadRequest,
+			Msg:  "Invalid query parameters",
+		})
+		return
+	}
+
+	// 设置默认值
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 20
+	}
+
+	orders, total, err := ctrl.inboundService.GetAll(&req)
 	if err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeInternalError,
@@ -44,16 +59,12 @@ func (ctrl *InboundController) GetAll(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &models.Response{
-		Code: models.CodeSuccess,
-		Msg:  "success",
-		Data: map[string]interface{}{
-			"orders": orders,
-			"total":  total,
-			"limit":  limit,
-			"offset": offset,
-		},
-	})
+	resp := models.GetInboundOrderResponse{
+		Orders: orders,
+		Total:  total,
+	}
+
+	c.JSON(http.StatusOK, &models.Response{Code: models.CodeSuccess, Msg: "success", Data: resp})
 }
 
 // Create godoc
@@ -98,14 +109,14 @@ func (ctrl *InboundController) Create(c *gin.Context) {
 }
 
 // GetByID godoc
-// @Summary      根据ID获取入库订单
-// @Description  根据订单ID获取入库订单详情
+// @Summary      根据ID获取入库订单详情
+// @Description  根据订单ID获取入库订单详情，包含订单基本信息和详细条目
 // @Tags         入库管理
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id path int true "订单ID"
-// @Success      200 {object} models.Response{data=models.InboundOrder} "获取成功"
+// @Success      200 {object} models.Response{data=models.GetInboudOrderDetailResp} "获取成功"
 // @Failure      200 {object} models.Response "获取失败"
 // @Router       /inbound/orders/{id} [get]
 func (ctrl *InboundController) GetByID(c *gin.Context) {
@@ -165,8 +176,22 @@ func (ctrl *InboundController) Update(c *gin.Context) {
 		return
 	}
 
-	order.ID = uint(id)
-	if err := ctrl.inboundService.Update(&order); err != nil {
+	// 构建更新字段映射
+	updates := make(map[string]interface{})
+	if order.SupplierName != "" {
+		updates["supplier_name"] = order.SupplierName
+	}
+	if order.Status != "" {
+		updates["status"] = order.Status
+	}
+	if order.Notes != "" {
+		updates["notes"] = order.Notes
+	}
+	if order.TotalAmount > 0 {
+		updates["total_amount"] = order.TotalAmount
+	}
+
+	if err := ctrl.inboundService.UpdateOrder(uint(id), updates); err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeInternalError,
 			Msg:  err.Error(),

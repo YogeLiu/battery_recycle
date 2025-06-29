@@ -11,17 +11,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type authService struct {
-	userRepo repository.UserRepository
+// AuthService 认证服务 (不再使用接口)
+type AuthService struct {
+	userRepo *repository.UserRepository
 }
 
-func NewAuthService(userRepo repository.UserRepository) AuthService {
-	return &authService{
+// NewAuthService 创建认证服务实例
+func NewAuthService(userRepo *repository.UserRepository) *AuthService {
+	return &AuthService{
 		userRepo: userRepo,
 	}
 }
 
-func (s *authService) Login(username, password string) (*models.LoginResponse, error) {
+func (s *AuthService) Login(username, password string) (*models.LoginResponse, error) {
 	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
@@ -44,7 +46,7 @@ func (s *authService) Login(username, password string) (*models.LoginResponse, e
 	}, nil
 }
 
-func (s *authService) ValidateToken(tokenString string) (*models.User, error) {
+func (s *AuthService) ValidateToken(tokenString string) (*models.User, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default_secret_key"
@@ -76,7 +78,7 @@ func (s *authService) ValidateToken(tokenString string) (*models.User, error) {
 	return user, nil
 }
 
-func (s *authService) GenerateToken(user *models.User) (string, error) {
+func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default_secret_key"

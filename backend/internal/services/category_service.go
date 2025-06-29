@@ -5,19 +5,22 @@ import (
 	"battery-erp-backend/internal/repository"
 )
 
-type categoryService struct {
-	categoryRepo  repository.CategoryRepository
-	inventoryRepo repository.InventoryRepository
+// CategoryService 类别服务 (不再使用接口)
+type CategoryService struct {
+	categoryRepo  *repository.CategoryRepository
+	inventoryRepo *repository.InventoryRepository
 }
 
-func NewCategoryService(categoryRepo repository.CategoryRepository, inventoryRepo repository.InventoryRepository) CategoryService {
-	return &categoryService{
+// NewCategoryService 创建类别服务实例
+func NewCategoryService(categoryRepo *repository.CategoryRepository, inventoryRepo *repository.InventoryRepository) *CategoryService {
+	return &CategoryService{
 		categoryRepo:  categoryRepo,
 		inventoryRepo: inventoryRepo,
 	}
 }
 
-func (s *categoryService) Create(category *models.BatteryCategory) error {
+// Create 创建分类
+func (s *CategoryService) Create(category *models.BatteryCategory) error {
 	// 创建分类
 	if err := s.categoryRepo.Create(category); err != nil {
 		return err
@@ -31,19 +34,37 @@ func (s *categoryService) Create(category *models.BatteryCategory) error {
 	return s.inventoryRepo.Create(inventory)
 }
 
-func (s *categoryService) GetByID(id uint) (*models.BatteryCategory, error) {
+// GetByID 根据ID获取分类
+func (s *CategoryService) GetByID(id uint) (*models.BatteryCategory, error) {
 	return s.categoryRepo.GetByID(id)
 }
 
-func (s *categoryService) GetAll() ([]models.BatteryCategory, error) {
+// GetAll 获取所有分类
+func (s *CategoryService) GetAll() ([]models.BatteryCategory, error) {
 	return s.categoryRepo.GetAll()
 }
 
-func (s *categoryService) Update(category *models.BatteryCategory) error {
-	return s.categoryRepo.Update(category)
+// UpdateName 显式更新分类名称
+func (s *CategoryService) UpdateName(id uint, name string) error {
+	return s.categoryRepo.UpdateName(id, name)
 }
 
-func (s *categoryService) Delete(id uint) error {
-	// 软删除分类
+// UpdateDescription 显式更新分类描述
+func (s *CategoryService) UpdateDescription(id uint, description string) error {
+	return s.categoryRepo.UpdateDescription(id, description)
+}
+
+// UpdateUnitPrice 显式更新单价
+func (s *CategoryService) UpdateUnitPrice(id uint, unitPrice float64) error {
+	return s.categoryRepo.UpdateUnitPrice(id, unitPrice)
+}
+
+// UpdateCategory 显式更新分类字段
+func (s *CategoryService) UpdateCategory(id uint, updates map[string]interface{}) error {
+	return s.categoryRepo.UpdateFields(id, updates)
+}
+
+// Delete 软删除分类
+func (s *CategoryService) Delete(id uint) error {
 	return s.categoryRepo.Delete(id)
 }

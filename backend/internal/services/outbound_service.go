@@ -6,19 +6,21 @@ import (
 	"errors"
 )
 
-type outboundService struct {
-	outboundRepo  repository.OutboundRepository
-	inventoryRepo repository.InventoryRepository
+// OutboundService 出库服务 (不再使用接口)
+type OutboundService struct {
+	outboundRepo  *repository.OutboundRepository
+	inventoryRepo *repository.InventoryRepository
 }
 
-func NewOutboundService(outboundRepo repository.OutboundRepository, inventoryRepo repository.InventoryRepository) OutboundService {
-	return &outboundService{
+// NewOutboundService 创建出库服务实例
+func NewOutboundService(outboundRepo *repository.OutboundRepository, inventoryRepo *repository.InventoryRepository) *OutboundService {
+	return &OutboundService{
 		outboundRepo:  outboundRepo,
 		inventoryRepo: inventoryRepo,
 	}
 }
 
-func (s *outboundService) Create(req *models.CreateOutboundOrderRequest, createdBy uint) (*models.OutboundOrder, error) {
+func (s *OutboundService) Create(req *models.CreateOutboundOrderRequest, createdBy uint) (*models.OutboundOrder, error) {
 	// Generate order number
 	orderNo, err := s.outboundRepo.GenerateOrderNo()
 	if err != nil {
@@ -82,18 +84,51 @@ func (s *outboundService) Create(req *models.CreateOutboundOrderRequest, created
 	return order, nil
 }
 
-func (s *outboundService) GetByID(id uint) (*models.OutboundOrder, error) {
-	return s.outboundRepo.GetByID(id)
+// GetByID 根据ID获取出库订单详情 (包含详细条目)
+func (s *OutboundService) GetByID(id uint) (*models.GetOutboundOrderDetailResp, error) {
+	order, err := s.outboundRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	items, err := s.outboundRepo.GetItemsByOrderID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetOutboundOrderDetailResp{Order: *order, Detail: items}, nil
 }
 
-func (s *outboundService) GetAll(limit, offset int) ([]models.OutboundOrder, int64, error) {
+// GetAll 获取所有出库订单 (支持条件筛选和分页)
+func (s *OutboundService) GetAll(req *models.GetOutboundOrderRequest) ([]models.OutboundOrder, int64, error) {
+	return s.outboundRepo.GetAllWithConditions(req)
+}
+
+// GetAllSimple 获取所有出库订单 (简单分页，保持向后兼容)
+func (s *OutboundService) GetAllSimple(limit, offset int) ([]models.OutboundOrder, int64, error) {
 	return s.outboundRepo.GetAll(limit, offset)
 }
 
-func (s *outboundService) Update(order *models.OutboundOrder) error {
-	return s.outboundRepo.Update(order)
+// UpdateStatus 显式更新订单状态
+func (s *OutboundService) UpdateStatus(id uint, status string) error {
+	return s.outboundRepo.UpdateStatus(id, status)
 }
 
-func (s *outboundService) Delete(id uint) error {
+// UpdateCustomerName 显式更新客户名称
+func (s *OutboundService) UpdateCustomerName(id uint, customerName string) error {
+	return s.outboundRepo.UpdateCustomerName(id, customerName)
+}
+
+// UpdateNotes 显式更新备注
+func (s *OutboundService) UpdateNotes(id uint, notes string) error {
+	return s.outboundRepo.UpdateNotes(id, notes)
+}
+
+// UpdateOrder 显式更新订单字段
+func (s *OutboundService) UpdateOrder(id uint, updates map[string]interface{}) error {
+	return s.outboundRepo.UpdateFields(id, updates)
+}
+
+func (s *OutboundService) Delete(id uint) error {
 	return s.outboundRepo.Delete(id)
 }

@@ -46,6 +46,7 @@ type InboundOrder struct {
 	Status       string    `json:"status" gorm:"size:20;not null;default:'completed'"` // 'completed', 'cancelled'
 	Notes        string    `json:"notes" gorm:"type:text"`                             // 备注
 	CreatedBy    uint      `json:"created_by" gorm:"not null"`                         // 创建人
+	IsDeleted    int       `json:"is_deleted" gorm:"default:0"`                        // 是否删除
 	CreatedAt    time.Time `json:"created_at"`                                         // 创建时间
 	UpdatedAt    time.Time `json:"updated_at"`                                         // 更新时间
 }
@@ -223,3 +224,64 @@ const (
 	CodeBadGateway         = 50200 // 502 - Bad Gateway
 	CodeServiceUnavailable = 50300 // 503 - Service Unavailable
 )
+
+type UpdateCategoryRequest struct {
+	ID          uint    `json:"-"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	UnitPrice   float64 `json:"unit_price"`
+}
+type GetInboundOrderRequest struct {
+	Page      int    `json:"page" form:"page" binding:"omitempty,min=1"`
+	PageSize  int    `json:"page_size" form:"page_size" binding:"omitempty,min=1,max=100"`
+	StartDate string `json:"start_date" form:"start_date"`
+	EndDate   string `json:"end_date" form:"end_date"`
+	Supplier  string `json:"supplier" form:"supplier"`
+}
+
+type GetInboundOrderResponse struct {
+	Orders []InboundOrder `json:"orders"`
+	Total  int64          `json:"total"`
+}
+
+type InboundOrderDetailDTO struct {
+	CategoryID   uint    `json:"category_id"`
+	CategoryName string  `json:"category_name"`
+	GrossWeight  float64 `json:"gross_weight"`
+	TareWeight   float64 `json:"tare_weight"`
+	NetWeight    float64 `json:"net_weight"`
+	UnitPrice    float64 `json:"unit_price"`
+	SubTotal     float64 `json:"sub_total"`
+}
+
+type GetInboudOrderDetailResp struct {
+	Order  InboundOrder            `json:"order"`
+	Detail []InboundOrderDetailDTO `json:"detail"`
+}
+
+// 出库订单相关模型
+type OutboundOrderDetailDTO struct {
+	CategoryID   uint    `json:"category_id"`
+	CategoryName string  `json:"category_name"`
+	Weight       float64 `json:"weight"`
+	UnitPrice    float64 `json:"unit_price"`
+	SubTotal     float64 `json:"sub_total"`
+}
+
+type GetOutboundOrderDetailResp struct {
+	Order  OutboundOrder            `json:"order"`
+	Detail []OutboundOrderDetailDTO `json:"detail"`
+}
+
+type GetOutboundOrderRequest struct {
+	Page      int    `json:"page" form:"page" binding:"omitempty,min=1"`
+	PageSize  int    `json:"page_size" form:"page_size" binding:"omitempty,min=1,max=100"`
+	StartDate string `json:"start_date" form:"start_date"`
+	EndDate   string `json:"end_date" form:"end_date"`
+	Customer  string `json:"customer" form:"customer"`
+}
+
+type GetOutboundOrderResponse struct {
+	Orders []OutboundOrder `json:"orders"`
+	Total  int64           `json:"total"`
+}

@@ -8,19 +8,21 @@ import (
 	"gorm.io/gorm"
 )
 
-type inventoryService struct {
-	inventoryRepo repository.InventoryRepository
-	categoryRepo  repository.CategoryRepository
+// InventoryService 库存服务 (不再使用接口)
+type InventoryService struct {
+	inventoryRepo *repository.InventoryRepository
+	categoryRepo  *repository.CategoryRepository
 }
 
-func NewInventoryService(inventoryRepo repository.InventoryRepository, categoryRepo repository.CategoryRepository) InventoryService {
-	return &inventoryService{
+// NewInventoryService 创建库存服务实例
+func NewInventoryService(inventoryRepo *repository.InventoryRepository, categoryRepo *repository.CategoryRepository) *InventoryService {
+	return &InventoryService{
 		inventoryRepo: inventoryRepo,
 		categoryRepo:  categoryRepo,
 	}
 }
 
-func (s *inventoryService) GetByCategoryID(categoryID uint) (*models.Inventory, error) {
+func (s *InventoryService) GetByCategoryID(categoryID uint) (*models.Inventory, error) {
 	// 先检查分类是否存在
 	_, err := s.categoryRepo.GetByID(categoryID)
 	if err != nil {
@@ -48,12 +50,12 @@ func (s *inventoryService) GetByCategoryID(categoryID uint) (*models.Inventory, 
 	return inventory, nil
 }
 
-func (s *inventoryService) GetAll() ([]models.Inventory, error) {
+func (s *InventoryService) GetAll() ([]models.Inventory, error) {
 	return s.inventoryRepo.GetAll()
 }
 
 // InitializeInventoryForCategory 为新分类初始化库存记录
-func (s *inventoryService) InitializeInventoryForCategory(categoryID uint) error {
+func (s *InventoryService) InitializeInventoryForCategory(categoryID uint) error {
 	// 检查是否已存在库存记录
 	_, err := s.inventoryRepo.GetByCategoryID(categoryID)
 	if err == nil {

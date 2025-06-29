@@ -5,19 +5,22 @@ import (
 	"battery-erp-backend/internal/repository"
 )
 
-type inboundService struct {
-	inboundRepo   repository.InboundRepository
-	inventoryRepo repository.InventoryRepository
+// InboundService 入库服务 (不再使用接口)
+type InboundService struct {
+	inboundRepo   *repository.InboundRepository
+	inventoryRepo *repository.InventoryRepository
 }
 
-func NewInboundService(inboundRepo repository.InboundRepository, inventoryRepo repository.InventoryRepository) InboundService {
-	return &inboundService{
+// NewInboundService 创建入库服务实例
+func NewInboundService(inboundRepo *repository.InboundRepository, inventoryRepo *repository.InventoryRepository) *InboundService {
+	return &InboundService{
 		inboundRepo:   inboundRepo,
 		inventoryRepo: inventoryRepo,
 	}
 }
 
-func (s *inboundService) Create(req *models.CreateInboundOrderRequest, createdBy uint) (*models.InboundOrder, error) {
+// Create 创建入库订单
+func (s *InboundService) Create(req *models.CreateInboundOrderRequest, createdBy uint) (*models.InboundOrder, error) {
 	// Generate order number
 	orderNo, err := s.inboundRepo.GenerateOrderNo()
 	if err != nil {
@@ -74,18 +77,47 @@ func (s *inboundService) Create(req *models.CreateInboundOrderRequest, createdBy
 	return order, nil
 }
 
-func (s *inboundService) GetByID(id uint) (*models.InboundOrder, error) {
-	return s.inboundRepo.GetByID(id)
+// GetByID 根据ID获取入库订单
+func (s *InboundService) GetByID(id uint) (*models.GetInboudOrderDetailResp, error) {
+	order, err := s.inboundRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	items, err := s.inboundRepo.GetItemsByOrderID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetInboudOrderDetailResp{Order: *order, Detail: items}, nil
 }
 
-func (s *inboundService) GetAll(limit, offset int) ([]models.InboundOrder, int64, error) {
-	return s.inboundRepo.GetAll(limit, offset)
+// GetAll 获取所有入库订单 (支持条件筛选和分页)
+func (s *InboundService) GetAll(req *models.GetInboundOrderRequest) ([]models.InboundOrder, int64, error) {
+	return s.inboundRepo.GetAllWithConditions(req)
 }
 
-func (s *inboundService) Update(order *models.InboundOrder) error {
-	return s.inboundRepo.Update(order)
+// UpdateStatus 显式更新订单状态
+func (s *InboundService) UpdateStatus(id uint, status string) error {
+	return s.inboundRepo.UpdateStatus(id, status)
 }
 
-func (s *inboundService) Delete(id uint) error {
+// UpdateSupplierName 显式更新供应商名称
+func (s *InboundService) UpdateSupplierName(id uint, supplierName string) error {
+	return s.inboundRepo.UpdateSupplierName(id, supplierName)
+}
+
+// UpdateNotes 显式更新备注
+func (s *InboundService) UpdateNotes(id uint, notes string) error {
+	return s.inboundRepo.UpdateNotes(id, notes)
+}
+
+// UpdateOrder 显式更新订单字段
+func (s *InboundService) UpdateOrder(id uint, updates map[string]interface{}) error {
+	return s.inboundRepo.UpdateFields(id, updates)
+}
+
+// Delete 删除入库订单
+func (s *InboundService) Delete(id uint) error {
 	return s.inboundRepo.Delete(id)
 }

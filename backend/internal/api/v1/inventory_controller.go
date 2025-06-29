@@ -10,10 +10,10 @@ import (
 )
 
 type InventoryController struct {
-	inventoryService services.InventoryService
+	inventoryService *services.InventoryService
 }
 
-func NewInventoryController(inventoryService services.InventoryService) *InventoryController {
+func NewInventoryController(inventoryService *services.InventoryService) *InventoryController {
 	return &InventoryController{
 		inventoryService: inventoryService,
 	}

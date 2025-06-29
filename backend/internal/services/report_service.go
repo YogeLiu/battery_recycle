@@ -6,17 +6,19 @@ import (
 	"time"
 )
 
-type reportService struct {
+// ReportService 报表服务 (不再使用接口)
+type ReportService struct {
 	repos *repository.Repositories
 }
 
-func NewReportService(repos *repository.Repositories) ReportService {
-	return &reportService{
+// NewReportService 创建报表服务实例
+func NewReportService(repos *repository.Repositories) *ReportService {
+	return &ReportService{
 		repos: repos,
 	}
 }
 
-func (s *reportService) GetSummary(startDate, endDate string) (*models.ReportSummary, error) {
+func (s *ReportService) GetSummary(startDate, endDate string) (*models.ReportSummary, error) {
 	// 获取库存总览
 	inventories, err := s.repos.Inventory.GetAll()
 	if err != nil {

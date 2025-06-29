@@ -10,10 +10,10 @@ import (
 )
 
 type UserController struct {
-	userService services.UserService
+	userService *services.UserService
 }
 
-func NewUserController(userService services.UserService) *UserController {
+func NewUserController(userService *services.UserService) *UserController {
 	return &UserController{
 		userService: userService,
 	}
@@ -150,8 +150,23 @@ func (ctrl *UserController) Update(c *gin.Context) {
 		return
 	}
 
-	user.ID = uint(id)
-	if err := ctrl.userService.Update(&user); err != nil {
+	// 构建更新字段映射
+	updates := make(map[string]interface{})
+	if user.Username != "" {
+		updates["username"] = user.Username
+	}
+	if user.RealName != "" {
+		updates["real_name"] = user.RealName
+	}
+	if user.Role != "" {
+		updates["role"] = user.Role
+	}
+	if user.Password != "" {
+		// 密码将在 service 层自动加密
+		updates["password"] = user.Password
+	}
+
+	if err := ctrl.userService.UpdateUser(uint(id), updates); err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeInternalError,
 			Msg:  err.Error(),

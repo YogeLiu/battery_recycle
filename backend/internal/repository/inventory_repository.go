@@ -9,15 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type inventoryRepository struct {
+// InventoryRepository 库存数据仓库 (不再是接口实现)
+type InventoryRepository struct {
 	db *gorm.DB
 }
 
-func NewInventoryRepository(db *gorm.DB) InventoryRepository {
-	return &inventoryRepository{db: db}
+// NewInventoryRepository 创建库存仓库实例
+func NewInventoryRepository(db *gorm.DB) *InventoryRepository {
+	return &InventoryRepository{db: db}
 }
 
-func (r *inventoryRepository) GetByCategoryID(categoryID uint) (*models.Inventory, error) {
+// GetByCategoryID 根据分类ID获取库存
+func (r *InventoryRepository) GetByCategoryID(categoryID uint) (*models.Inventory, error) {
 	var inventory models.Inventory
 	err := r.db.Where("category_id = ?", categoryID).First(&inventory).Error
 	if err != nil {
@@ -26,21 +29,40 @@ func (r *inventoryRepository) GetByCategoryID(categoryID uint) (*models.Inventor
 	return &inventory, nil
 }
 
-func (r *inventoryRepository) GetAll() ([]models.Inventory, error) {
+// GetAll 获取所有库存
+func (r *InventoryRepository) GetAll() ([]models.Inventory, error) {
 	var inventories []models.Inventory
 	err := r.db.Find(&inventories).Error
 	return inventories, err
 }
 
-func (r *inventoryRepository) Create(inventory *models.Inventory) error {
+// Create 创建库存记录
+func (r *InventoryRepository) Create(inventory *models.Inventory) error {
 	return r.db.Create(inventory).Error
 }
 
-func (r *inventoryRepository) Update(inventory *models.Inventory) error {
-	return r.db.Save(inventory).Error
+// UpdateCurrentWeight 显式更新当前重量
+func (r *InventoryRepository) UpdateCurrentWeight(categoryID uint, weight float64) error {
+	return r.db.Model(&models.Inventory{}).Where("category_id = ?", categoryID).Update("current_weight_kg", weight).Error
 }
 
-func (r *inventoryRepository) UpdateWeight(categoryID uint, weightChange float64, isInbound bool) error {
+// UpdateLastInboundAt 显式更新最后入库时间
+func (r *InventoryRepository) UpdateLastInboundAt(categoryID uint, lastInboundAt time.Time) error {
+	return r.db.Model(&models.Inventory{}).Where("category_id = ?", categoryID).Update("last_inbound_at", lastInboundAt).Error
+}
+
+// UpdateLastOutboundAt 显式更新最后出库时间
+func (r *InventoryRepository) UpdateLastOutboundAt(categoryID uint, lastOutboundAt time.Time) error {
+	return r.db.Model(&models.Inventory{}).Where("category_id = ?", categoryID).Update("last_outbound_at", lastOutboundAt).Error
+}
+
+// UpdateFields 显式更新指定字段
+func (r *InventoryRepository) UpdateFields(categoryID uint, updates map[string]interface{}) error {
+	return r.db.Model(&models.Inventory{}).Where("category_id = ?", categoryID).Updates(updates).Error
+}
+
+// UpdateWeight 显式更新库存重量 (事务)
+func (r *InventoryRepository) UpdateWeight(categoryID uint, weightChange float64, isInbound bool) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var inventory models.Inventory
 
@@ -64,23 +86,27 @@ func (r *inventoryRepository) UpdateWeight(categoryID uint, weightChange float64
 			}
 		}
 
-		// Update weight
+		// 显式更新相关字段
+		now := time.Now()
+		updates := map[string]interface{}{
+			"updated_at": now,
+		}
+
 		if isInbound {
-			inventory.CurrentWeightKg += weightChange
-			now := time.Now()
-			inventory.LastInboundAt = &now
+			newWeight := inventory.CurrentWeightKg + weightChange
+			updates["current_weight_kg"] = newWeight
+			updates["last_inbound_at"] = now
 		} else {
 			// Check for overselling
 			if inventory.CurrentWeightKg < weightChange {
 				return errors.New(fmt.Sprintf("insufficient inventory: current weight is %.3f kg, requested %.3f kg",
 					inventory.CurrentWeightKg, weightChange))
 			}
-			inventory.CurrentWeightKg -= weightChange
-			now := time.Now()
-			inventory.LastOutboundAt = &now
+			newWeight := inventory.CurrentWeightKg - weightChange
+			updates["current_weight_kg"] = newWeight
+			updates["last_outbound_at"] = now
 		}
 
-		inventory.UpdatedAt = time.Now()
-		return tx.Save(&inventory).Error
+		return tx.Model(&models.Inventory{}).Where("category_id = ?", categoryID).Updates(updates).Error
 	})
 }

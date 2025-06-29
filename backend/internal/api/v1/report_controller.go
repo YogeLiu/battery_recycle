@@ -9,10 +9,10 @@ import (
 )
 
 type ReportController struct {
-	reportService services.ReportService
+	reportService *services.ReportService
 }
 
-func NewReportController(reportService services.ReportService) *ReportController {
+func NewReportController(reportService *services.ReportService) *ReportController {
 	return &ReportController{
 		reportService: reportService,
 	}

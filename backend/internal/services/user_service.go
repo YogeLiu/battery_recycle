@@ -5,39 +5,75 @@ import (
 	"battery-erp-backend/internal/repository"
 )
 
-type userService struct {
-	userRepo repository.UserRepository
+// UserService 用户服务 (不再使用接口)
+type UserService struct {
+	userRepo *repository.UserRepository
 }
 
-func NewUserService(userRepo repository.UserRepository) UserService {
-	return &userService{
+// NewUserService 创建用户服务实例
+func NewUserService(userRepo *repository.UserRepository) *UserService {
+	return &UserService{
 		userRepo: userRepo,
 	}
 }
 
-func (s *userService) Create(user *models.User) error {
+// Create 创建用户
+func (s *UserService) Create(user *models.User) error {
 	// Hash password before saving
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
 		return err
 	}
 	user.Password = hashedPassword
-	
+
 	return s.userRepo.Create(user)
 }
 
-func (s *userService) GetByID(id uint) (*models.User, error) {
+// GetByID 根据ID获取用户
+func (s *UserService) GetByID(id uint) (*models.User, error) {
 	return s.userRepo.GetByID(id)
 }
 
-func (s *userService) GetAll() ([]models.User, error) {
+// GetAll 获取所有用户
+func (s *UserService) GetAll() ([]models.User, error) {
 	return s.userRepo.GetAll()
 }
 
-func (s *userService) Update(user *models.User) error {
-	return s.userRepo.Update(user)
+// UpdatePassword 显式更新用户密码
+func (s *UserService) UpdatePassword(id uint, newPassword string) error {
+	hashedPassword, err := HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	return s.userRepo.UpdatePassword(id, hashedPassword)
 }
 
-func (s *userService) Delete(id uint) error {
+// UpdateRealName 显式更新真实姓名
+func (s *UserService) UpdateRealName(id uint, realName string) error {
+	return s.userRepo.UpdateRealName(id, realName)
+}
+
+// UpdateRole 显式更新用户角色
+func (s *UserService) UpdateRole(id uint, role string) error {
+	return s.userRepo.UpdateRole(id, role)
+}
+
+// UpdateUser 显式更新用户字段
+func (s *UserService) UpdateUser(id uint, updates map[string]interface{}) error {
+	// 如果更新密码，需要先加密
+	if password, exists := updates["password"]; exists {
+		if passwordStr, ok := password.(string); ok {
+			hashedPassword, err := HashPassword(passwordStr)
+			if err != nil {
+				return err
+			}
+			updates["password"] = hashedPassword
+		}
+	}
+	return s.userRepo.UpdateFields(id, updates)
+}
+
+// Delete 删除用户
+func (s *UserService) Delete(id uint) error {
 	return s.userRepo.Delete(id)
 }
