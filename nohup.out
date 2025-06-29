@@ -1,0 +1,14 @@
+Building Go backend...
+Starting backend server on port 8036...
+Building Go backend...
+Starting backend server on port 8036...
+[mysql] 2025/06/29 15:34:04 packets.go:37: unexpected EOF
+[mysql] 2025/06/29 15:34:04 packets.go:37: unexpected EOF
+
+2025/06/29 15:34:04 [35m/Users/yoge/dev/yoge/jsc/backend/cmd/server/main.go:111
+[0m[31m[error] [0mfailed to initialize database, got error invalid connection
+2025/06/29 15:34:04 Failed to connect to database:invalid connection
+
+2025/06/29 15:34:04 [35m/Users/yoge/dev/yoge/jsc/backend/cmd/server/main.go:111
+[0m[31m[error] [0mfailed to initialize database, got error invalid connection
+2025/06/29 15:34:04 Failed to connect to database:invalid connection
