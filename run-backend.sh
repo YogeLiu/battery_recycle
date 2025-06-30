@@ -9,8 +9,6 @@ export DB_NAME=battery_recycle_erp
 export SEED_DATABASE=true
 export JWT_SECRET=your_jwt_secret_key
 
-# Navigate to backend directory
-cd backend
 
 # Build and run the Go application
 echo "Building Go backend..."
