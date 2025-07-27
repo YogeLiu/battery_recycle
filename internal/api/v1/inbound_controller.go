@@ -34,7 +34,7 @@ func (ctrl *InboundController) GetAll(c *gin.Context) {
 	var req models.GetInboundOrderRequest
 
 	// 从查询参数绑定
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeBadRequest,
 			Msg:  "Invalid query parameters",
