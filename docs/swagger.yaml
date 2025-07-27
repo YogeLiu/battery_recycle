@@ -49,6 +49,42 @@ definitions:
     - items
     - supplier_name
     type: object
+  models.CreateOutboundOrderItem:
+    properties:
+      category_id:
+        type: integer
+      unit_price:
+        type: number
+      weight:
+        type: number
+    required:
+    - category_id
+    - unit_price
+    - weight
+    type: object
+  models.CreateOutboundOrderRequest:
+    properties:
+      car_number:
+        type: string
+      delivery_address:
+        type: string
+      driver_name:
+        type: string
+      driver_phone:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.CreateOutboundOrderItem'
+        type: array
+      notes:
+        type: string
+    required:
+    - car_number
+    - delivery_address
+    - driver_name
+    - driver_phone
+    - items
+    type: object
   models.GetInboudOrderDetailResp:
     properties:
       detail:
@@ -187,24 +223,44 @@ definitions:
     type: object
   models.OutboundOrder:
     properties:
+      car_number:
+        description: 车号
+        type: string
       created_at:
+        description: 创建时间
         type: string
       created_by:
+        description: 创建人
         type: integer
-      customer_name:
+      delivery_address:
+        description: 送货地
+        type: string
+      driver_name:
+        description: 司机姓名
+        type: string
+      driver_phone:
+        description: 司机手机号
         type: string
       id:
+        description: 主键
+        type: integer
+      is_deleted:
+        description: 是否删除
         type: integer
       notes:
+        description: 备注
         type: string
       order_no:
+        description: 订单号 YYYYMMDD999999
         type: string
       status:
         description: '''completed'', ''cancelled'''
         type: string
       total_amount:
+        description: 总金额
         type: number
       updated_at:
+        description: 更新时间
         type: string
     type: object
   models.OutboundOrderDetailDTO:
@@ -226,6 +282,44 @@ definitions:
         type: integer
       data: {}
       msg:
+        type: string
+    type: object
+  models.UpdateOutboundOrderItem:
+    properties:
+      action:
+        description: '"add", "update", "delete"'
+        type: string
+      category_id:
+        type: integer
+      id:
+        description: 如果有ID则是更新，没有则是新增
+        type: integer
+      unit_price:
+        type: number
+      weight:
+        type: number
+    required:
+    - category_id
+    - unit_price
+    - weight
+    type: object
+  models.UpdateOutboundOrderRequest:
+    properties:
+      car_number:
+        type: string
+      delivery_address:
+        type: string
+      driver_name:
+        type: string
+      driver_phone:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.UpdateOutboundOrderItem'
+        type: array
+      notes:
+        type: string
+      status:
         type: string
     type: object
   models.User:
@@ -596,7 +690,52 @@ paths:
       summary: 获取所有出库订单
       tags:
       - 出库管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的出库订单，支持批量创建
+      parameters:
+      - description: 创建出库订单请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOutboundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建失败
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建出库订单
+      tags:
+      - 出库管理
   /outbound/orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据订单ID删除出库订单
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除失败
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除出库订单
+      tags:
+      - 出库管理
     get:
       consumes:
       - application/json
@@ -617,6 +756,34 @@ paths:
       security:
       - BearerAuth: []
       summary: 根据ID获取出库订单详情
+      tags:
+      - 出库管理
+    put:
+      consumes:
+      - application/json
+      description: 根据订单ID更新出库订单
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新出库订单请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateOutboundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新失败
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新出库订单
       tags:
       - 出库管理
   /users:

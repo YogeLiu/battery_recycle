@@ -24,6 +24,11 @@ func NewOutboundRepository(db *gorm.DB) *OutboundRepository {
 	return &OutboundRepository{db: db}
 }
 
+// GetDB 获取数据库实例
+func (r *OutboundRepository) GetDB() *gorm.DB {
+	return r.db
+}
+
 // Create 创建出库订单
 func (r *OutboundRepository) Create(order *models.OutboundOrder) error {
 	return r.db.Create(order).Error
@@ -163,4 +168,36 @@ func (r *OutboundRepository) GenerateOrderNo() (string, error) {
 	// 格式：OUT-20240101-123456789-1234
 	orderNo := fmt.Sprintf("OUT-%s-%s-%s", dateStr, nanoStr, randomStr)
 	return orderNo, nil
+}
+
+// UpdateItem 更新出库订单项
+func (r *OutboundRepository) UpdateItem(item *models.OutboundOrderItem) error {
+	return r.db.Save(item).Error
+}
+
+// DeleteItem 删除出库订单项
+func (r *OutboundRepository) DeleteItem(itemID uint) error {
+	return r.db.Delete(&models.OutboundOrderItem{}, itemID).Error
+}
+
+// DeleteItemsByOrderID 删除订单的所有订单项
+func (r *OutboundRepository) DeleteItemsByOrderID(orderID uint) error {
+	return r.db.Where("order_id = ?", orderID).Delete(&models.OutboundOrderItem{}).Error
+}
+
+// GetItemByID 根据ID获取订单项
+func (r *OutboundRepository) GetItemByID(itemID uint) (*models.OutboundOrderItem, error) {
+	var item models.OutboundOrderItem
+	err := r.db.Where("id = ?", itemID).First(&item).Error
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+// GetRawItemsByOrderID 获取原始订单项（不包含分类名称）
+func (r *OutboundRepository) GetRawItemsByOrderID(orderID uint) ([]models.OutboundOrderItem, error) {
+	var items []models.OutboundOrderItem
+	err := r.db.Where("order_id = ?", orderID).Find(&items).Error
+	return items, err
 }

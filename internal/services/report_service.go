@@ -20,7 +20,7 @@ func NewReportService(repos *repository.Repositories) *ReportService {
 
 func (s *ReportService) GetSummary(startDate, endDate string) (*models.ReportSummary, error) {
 	// 获取库存总览
-	inventories, err := s.repos.Inventory.GetAll()
+	inventories, err := s.repos.InventoryRepo.GetAll()
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (s *ReportService) GetSummary(startDate, endDate string) (*models.ReportSum
 		totalWeight += inv.CurrentWeightKg
 
 		// 手动获取分类信息
-		category, err := s.repos.Category.GetByID(inv.CategoryID)
+		category, err := s.repos.CategoryRepo.GetByID(inv.CategoryID)
 		categoryName := "Unknown"
 		if err == nil && category != nil {
 			categoryName = category.Name

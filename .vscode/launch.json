@@ -9,17 +9,9 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/backend/cmd/server/main.go",
+            "program": "${workspaceFolder}/main.go",
             "env": {
-                "GO_ENV": "development",
-                "GO_PORT": "8036",
-                "DB_HOST": "182.92.150.161",
-                "DB_PORT": "3006",
-                "DB_USER": "root",
-                "DB_PASSWORD": "yoge@coder%%%123321!",
-                "DB_NAME": "doc_ai",
-                "SEED_DATABASE": "true",
-                "JWT_SECRET": "your_jwt_secret_key"
+                "GO_ENV": "test"
             }
         }
     ]

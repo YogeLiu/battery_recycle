@@ -71,6 +71,17 @@ func (ctrl *OutboundController) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, &models.Response{Code: models.CodeSuccess, Msg: "success", Data: resp})
 }
 
+// Create godoc
+// @Summary      创建出库订单
+// @Description  创建新的出库订单，支持批量创建
+// @Tags         出库管理
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body models.CreateOutboundOrderRequest true "创建出库订单请求"
+// @Success      200 {object} models.Response "创建成功"
+// @Failure      200 {object} models.Response "创建失败"
+// @Router       /outbound/orders [post]
 func (ctrl *OutboundController) Create(c *gin.Context) {
 	var req models.CreateOutboundOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -138,6 +149,18 @@ func (ctrl *OutboundController) GetByID(c *gin.Context) {
 	})
 }
 
+// Update godoc
+// @Summary      更新出库订单
+// @Description  根据订单ID更新出库订单
+// @Tags         出库管理
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "订单ID"
+// @Param        request body models.UpdateOutboundOrderRequest true "更新出库订单请求"
+// @Success      200 {object} models.Response "更新成功"
+// @Failure      200 {object} models.Response "更新失败"
+// @Router       /outbound/orders/{id} [put]
 func (ctrl *OutboundController) Update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -148,34 +171,42 @@ func (ctrl *OutboundController) Update(c *gin.Context) {
 		return
 	}
 
-	var order models.OutboundOrder
-	if err := c.ShouldBindJSON(&order); err != nil {
+	var req models.UpdateOutboundOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusOK, &models.Response{
 			Code: models.CodeBadRequest,
-			Msg:  "Invalid request data",
+			Msg:  "Invalid request data: " + err.Error(),
 		})
 		return
 	}
 
-	// 构建更新字段映射
-	updates := make(map[string]interface{})
-	if order.CustomerName != "" {
-		updates["customer_name"] = order.CustomerName
-	}
-	if order.Status != "" {
-		updates["status"] = order.Status
-	}
-	if order.Notes != "" {
-		updates["notes"] = order.Notes
-	}
-	if order.TotalAmount > 0 {
-		updates["total_amount"] = order.TotalAmount
+	// 判断是否需要更新订单项
+	if len(req.Items) > 0 {
+		// 完整更新（包括订单项）
+		if err := ctrl.outboundService.UpdateOrderComplete(uint(id), &req); err != nil {
+			c.JSON(http.StatusOK, &models.Response{
+				Code: models.CodeInternalError,
+				Msg:  err.Error(),
+			})
+			return
+		}
+	} else {
+		// 仅更新基本信息
+		if err := ctrl.outboundService.UpdateOrderBasic(uint(id), &req); err != nil {
+			c.JSON(http.StatusOK, &models.Response{
+				Code: models.CodeInternalError,
+				Msg:  err.Error(),
+			})
+			return
+		}
 	}
 
-	if err := ctrl.outboundService.UpdateOrder(uint(id), updates); err != nil {
+	// 获取更新后的订单详情
+	updatedOrder, err := ctrl.outboundService.GetByID(uint(id))
+	if err != nil {
 		c.JSON(http.StatusOK, &models.Response{
-			Code: models.CodeInternalError,
-			Msg:  err.Error(),
+			Code: models.CodeSuccess,
+			Msg:  "Order updated successfully, but failed to retrieve updated data",
 		})
 		return
 	}
@@ -183,10 +214,21 @@ func (ctrl *OutboundController) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, &models.Response{
 		Code: models.CodeSuccess,
 		Msg:  "Order updated successfully",
-		Data: order,
+		Data: updatedOrder,
 	})
 }
 
+// Delete godoc
+// @Summary      删除出库订单
+// @Description  根据订单ID删除出库订单
+// @Tags         出库管理
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "订单ID"
+// @Success      200 {object} models.Response "删除成功"
+// @Failure      200 {object} models.Response "删除失败"
+// @Router       /outbound/orders/{id} [delete]
 func (ctrl *OutboundController) Delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {

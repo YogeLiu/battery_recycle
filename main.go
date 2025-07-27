@@ -6,7 +6,8 @@ import (
 	"battery-erp-backend/internal/repository"
 	"battery-erp-backend/internal/services"
 	"log"
-	"os"
+
+	"battery-erp-backend/config"
 
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -36,8 +37,14 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("Failed to load configuration:", err)
+	}
+
 	// Initialize database
-	db, err := initDatabase()
+	db, err := initDatabase(cfg)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -48,7 +55,7 @@ func main() {
 	// Initialize services
 	services := services.NewServices(repos)
 
-	gin.SetMode(os.Getenv("GO_ENV"))
+	gin.SetMode(cfg.Server.Mode)
 	// Initialize router
 	engine := gin.Default()
 
@@ -73,47 +80,15 @@ func main() {
 	v1.SetupRoutes(engine, services)
 
 	// Start server
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8036"
-	}
-
-	log.Printf("Server starting on port %s", port)
-	log.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html", port)
-	if err := engine.Run(":" + port); err != nil {
+	log.Printf("Server starting on port %s", cfg.Server.Port)
+	log.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html", cfg.Server.Port)
+	if err := engine.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }
 
-func initDatabase() (*gorm.DB, error) {
-	host := os.Getenv("DB_HOST")
-	if host == "" {
-		host = "localhost"
-	}
-
-	user := os.Getenv("DB_USER")
-	if user == "" {
-		user = "root"
-	}
-
-	password := os.Getenv("DB_PASSWORD")
-	if password == "" {
-		password = "password"
-	}
-
-	dbname := os.Getenv("DB_NAME")
-	if dbname == "" {
-		dbname = "battery_erp"
-	}
-
-	port := os.Getenv("DB_PORT")
-	if port == "" {
-		port = "3306"
-	}
-
-	dsn := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + dbname + "?charset=utf8mb4&parseTime=True&loc=Local"
-
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+func initDatabase(cfg *config.Config) (*gorm.DB, error) {
+	db, err := gorm.Open(mysql.Open(cfg.GetDSN()), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}

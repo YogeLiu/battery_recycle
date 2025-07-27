@@ -77,15 +77,19 @@ func (InboundOrderItem) TableName() string {
 
 // OutboundOrder represents a sales/outbound order
 type OutboundOrder struct {
-	ID           uint      `json:"id" gorm:"primaryKey"`
-	OrderNo      string    `json:"order_no" gorm:"uniqueIndex;size:50;not null"`
-	CustomerName string    `json:"customer_name" gorm:"size:100;not null"`
-	TotalAmount  float64   `json:"total_amount" gorm:"type:decimal(15,2);not null"`
-	Status       string    `json:"status" gorm:"size:20;not null;default:'completed'"` // 'completed', 'cancelled'
-	Notes        string    `json:"notes" gorm:"type:text"`
-	CreatedBy    uint      `json:"created_by" gorm:"not null"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID              uint      `json:"id" gorm:"primaryKey"`                               // 主键
+	OrderNo         string    `json:"order_no" gorm:"size:50;uniqueIndex;not null"`       // 订单号 YYYYMMDD999999
+	DeliveryAddress string    `json:"delivery_address" gorm:"size:255;not null"`          // 送货地
+	CarNumber       string    `json:"car_number" gorm:"size:50;not null"`                 // 车号
+	DriverName      string    `json:"driver_name" gorm:"size:50;not null"`                // 司机姓名
+	DriverPhone     string    `json:"driver_phone" gorm:"size:20;not null"`               // 司机手机号
+	TotalAmount     float64   `json:"total_amount" gorm:"type:decimal(15,2);not null"`    // 总金额
+	Status          string    `json:"status" gorm:"size:20;not null;default:'completed'"` // 'completed', 'cancelled'
+	Notes           string    `json:"notes" gorm:"type:text"`                             // 备注
+	CreatedBy       uint      `json:"created_by" gorm:"not null"`                         // 创建人
+	IsDeleted       int       `json:"is_deleted" gorm:"default:0"`                        // 是否删除
+	CreatedAt       time.Time `json:"created_at"`                                         // 创建时间
+	UpdatedAt       time.Time `json:"updated_at"`                                         // 更新时间
 }
 
 // TableName sets the insert table name for this struct type
@@ -194,9 +198,12 @@ type CreateInboundOrderItem struct {
 
 // CreateOutboundOrderRequest represents request to create outbound order
 type CreateOutboundOrderRequest struct {
-	CustomerName string                    `json:"customer_name" binding:"required"`
-	Notes        string                    `json:"notes"`
-	Items        []CreateOutboundOrderItem `json:"items" binding:"required,dive"`
+	DeliveryAddress string                    `json:"delivery_address" binding:"required"`
+	CarNumber       string                    `json:"car_number" binding:"required"`
+	DriverName      string                    `json:"driver_name" binding:"required"`
+	DriverPhone     string                    `json:"driver_phone" binding:"required"`
+	Notes           string                    `json:"notes"`
+	Items           []CreateOutboundOrderItem `json:"items" binding:"required,dive"`
 }
 
 // CreateOutboundOrderItem represents item in create outbound order request
@@ -284,4 +291,24 @@ type GetOutboundOrderRequest struct {
 type GetOutboundOrderResponse struct {
 	Orders []OutboundOrder `json:"orders"`
 	Total  int64           `json:"total"`
+}
+
+// UpdateOutboundOrderRequest represents request to update outbound order
+type UpdateOutboundOrderRequest struct {
+	DeliveryAddress string                    `json:"delivery_address"`
+	CarNumber       string                    `json:"car_number"`
+	DriverName      string                    `json:"driver_name"`
+	DriverPhone     string                    `json:"driver_phone"`
+	Status          string                    `json:"status"`
+	Notes           string                    `json:"notes"`
+	Items           []UpdateOutboundOrderItem `json:"items,omitempty"`
+}
+
+// UpdateOutboundOrderItem represents item in update outbound order request
+type UpdateOutboundOrderItem struct {
+	ID         uint    `json:"id,omitempty"` // 如果有ID则是更新，没有则是新增
+	CategoryID uint    `json:"category_id" binding:"required"`
+	Weight     float64 `json:"weight" binding:"required,gt=0"`
+	UnitPrice  float64 `json:"unit_price" binding:"required,gt=0"`
+	Action     string  `json:"action,omitempty"` // "add", "update", "delete"
 }

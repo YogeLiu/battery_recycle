@@ -558,6 +558,43 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建新的出库订单，支持批量创建",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "出库管理"
+                ],
+                "summary": "创建出库订单",
+                "parameters": [
+                    {
+                        "description": "创建出库订单请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateOutboundOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建失败",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
             }
         },
         "/outbound/orders/{id}": {
@@ -590,6 +627,85 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "获取失败",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据订单ID更新出库订单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "出库管理"
+                ],
+                "summary": "更新出库订单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "订单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新出库订单请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateOutboundOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新失败",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据订单ID删除出库订单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "出库管理"
+                ],
+                "summary": "删除出库订单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "订单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除失败",
                         "schema": {
                             "$ref": "#/definitions/models.Response"
                         }
@@ -852,6 +968,58 @@ const docTemplate = `{
                 }
             }
         },
+        "models.CreateOutboundOrderItem": {
+            "type": "object",
+            "required": [
+                "category_id",
+                "unit_price",
+                "weight"
+            ],
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "unit_price": {
+                    "type": "number"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.CreateOutboundOrderRequest": {
+            "type": "object",
+            "required": [
+                "car_number",
+                "delivery_address",
+                "driver_name",
+                "driver_phone",
+                "items"
+            ],
+            "properties": {
+                "car_number": {
+                    "type": "string"
+                },
+                "delivery_address": {
+                    "type": "string"
+                },
+                "driver_name": {
+                    "type": "string"
+                },
+                "driver_phone": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CreateOutboundOrderItem"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                }
+            }
+        },
         "models.GetInboudOrderDetailResp": {
             "type": "object",
             "properties": {
@@ -1057,22 +1225,44 @@ const docTemplate = `{
         "models.OutboundOrder": {
             "type": "object",
             "properties": {
+                "car_number": {
+                    "description": "车号",
+                    "type": "string"
+                },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "created_by": {
+                    "description": "创建人",
                     "type": "integer"
                 },
-                "customer_name": {
+                "delivery_address": {
+                    "description": "送货地",
+                    "type": "string"
+                },
+                "driver_name": {
+                    "description": "司机姓名",
+                    "type": "string"
+                },
+                "driver_phone": {
+                    "description": "司机手机号",
                     "type": "string"
                 },
                 "id": {
+                    "description": "主键",
+                    "type": "integer"
+                },
+                "is_deleted": {
+                    "description": "是否删除",
                     "type": "integer"
                 },
                 "notes": {
+                    "description": "备注",
                     "type": "string"
                 },
                 "order_no": {
+                    "description": "订单号 YYYYMMDD999999",
                     "type": "string"
                 },
                 "status": {
@@ -1080,9 +1270,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "total_amount": {
+                    "description": "总金额",
                     "type": "number"
                 },
                 "updated_at": {
+                    "description": "更新时间",
                     "type": "string"
                 }
             }
@@ -1115,6 +1307,62 @@ const docTemplate = `{
                 },
                 "data": {},
                 "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateOutboundOrderItem": {
+            "type": "object",
+            "required": [
+                "category_id",
+                "unit_price",
+                "weight"
+            ],
+            "properties": {
+                "action": {
+                    "description": "\"add\", \"update\", \"delete\"",
+                    "type": "string"
+                },
+                "category_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "如果有ID则是更新，没有则是新增",
+                    "type": "integer"
+                },
+                "unit_price": {
+                    "type": "number"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.UpdateOutboundOrderRequest": {
+            "type": "object",
+            "properties": {
+                "car_number": {
+                    "type": "string"
+                },
+                "delivery_address": {
+                    "type": "string"
+                },
+                "driver_name": {
+                    "type": "string"
+                },
+                "driver_phone": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UpdateOutboundOrderItem"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
