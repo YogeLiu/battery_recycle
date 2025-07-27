@@ -13,12 +13,12 @@ func SetupRoutes(engine *gin.Engine, services *services.Services) {
 
 	// Controllers
 	authController := NewAuthController(services.Auth)
-	userController := NewUserController(services.User)
-	categoryController := NewCategoryController(services.Category)
-	inboundController := NewInboundController(services.Inbound)
-	outboundController := NewOutboundController(services.Outbound)
-	inventoryController := NewInventoryController(services.Inventory)
-	reportController := NewReportController(services.Report)
+	userController := NewUserController(services.UserService)
+	categoryController := NewCategoryController(services.CategoryService)
+	inboundController := NewInboundController(services.InboundService)
+	outboundController := NewOutboundController(services.OutboundService)
+	inventoryController := NewInventoryController(services.InventoryService)
+	reportController := NewReportController(services.ReportService)
 
 	// Auth routes (no middleware)
 	authRoutes := v1.Group("/auth")

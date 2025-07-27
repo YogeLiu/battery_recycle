@@ -71,6 +71,17 @@ func (ctrl *OutboundController) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, &models.Response{Code: models.CodeSuccess, Msg: "success", Data: resp})
 }
 
+// Create godoc
+// @Summary      创建出库订单
+// @Description  创建新的出库订单，支持批量创建
+// @Tags         出库管理
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body models.CreateOutboundOrderRequest true "创建出库订单请求"
+// @Success      200 {object} models.Response "创建成功"
+// @Failure      200 {object} models.Response "创建失败"
+// @Router       /jxc/v1/outbound/orders [post]
 func (ctrl *OutboundController) Create(c *gin.Context) {
 	var req models.CreateOutboundOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -187,6 +198,17 @@ func (ctrl *OutboundController) Update(c *gin.Context) {
 	})
 }
 
+// Delete godoc
+// @Summary      删除出库订单
+// @Description  根据订单ID删除出库订单
+// @Tags         出库管理
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "订单ID"
+// @Success      200 {object} models.Response "删除成功"
+// @Failure      200 {object} models.Response "删除失败"
+// @Router       /jxc/v1/outbound/orders/{id} [delete]
 func (ctrl *OutboundController) Delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {

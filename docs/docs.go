@@ -498,6 +498,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/jxc/v1/outbound/orders": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建新的出库订单，支持批量创建",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "出库管理"
+                ],
+                "summary": "创建出库订单",
+                "parameters": [
+                    {
+                        "description": "创建出库订单请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateOutboundOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建失败",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/jxc/v1/outbound/orders/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据订单ID删除出库订单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "出库管理"
+                ],
+                "summary": "删除出库订单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "订单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除失败",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/outbound/orders": {
             "get": {
                 "security": [
@@ -848,6 +924,46 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "supplier_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CreateOutboundOrderItem": {
+            "type": "object",
+            "required": [
+                "category_id",
+                "unit_price",
+                "weight"
+            ],
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "unit_price": {
+                    "type": "number"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.CreateOutboundOrderRequest": {
+            "type": "object",
+            "required": [
+                "customer_name",
+                "items"
+            ],
+            "properties": {
+                "customer_name": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CreateOutboundOrderItem"
+                    }
+                },
+                "notes": {
                     "type": "string"
                 }
             }

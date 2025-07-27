@@ -49,6 +49,33 @@ definitions:
     - items
     - supplier_name
     type: object
+  models.CreateOutboundOrderItem:
+    properties:
+      category_id:
+        type: integer
+      unit_price:
+        type: number
+      weight:
+        type: number
+    required:
+    - category_id
+    - unit_price
+    - weight
+    type: object
+  models.CreateOutboundOrderRequest:
+    properties:
+      customer_name:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.CreateOutboundOrderItem'
+        type: array
+      notes:
+        type: string
+    required:
+    - customer_name
+    - items
+    type: object
   models.GetInboudOrderDetailResp:
     properties:
       detail:
@@ -556,6 +583,53 @@ paths:
       summary: 根据分类ID获取库存
       tags:
       - 库存管理
+  /jxc/v1/outbound/orders:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的出库订单，支持批量创建
+      parameters:
+      - description: 创建出库订单请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOutboundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建失败
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建出库订单
+      tags:
+      - 出库管理
+  /jxc/v1/outbound/orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据订单ID删除出库订单
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除失败
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除出库订单
+      tags:
+      - 出库管理
   /outbound/orders:
     get:
       consumes:
