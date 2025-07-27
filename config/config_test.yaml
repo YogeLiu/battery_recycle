@@ -1,0 +1,10 @@
+database:
+  host: 127.0.0.1
+  port: "3006"
+  user: root
+  password: YogeLiu1996@123!#asd
+  name: battery_recycle_erp
+
+server:
+  port: "8036"
+  mode: test

@@ -1,0 +1,10 @@
+database:
+  host: 182.92.150.161
+  port: "3006"
+  user: root
+  password: yoge@coder%%%123321!
+  name: battery_recycle_erp
+
+server:
+  port: "8036"
+  mode: release
