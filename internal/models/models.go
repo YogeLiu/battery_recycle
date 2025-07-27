@@ -188,7 +188,7 @@ type CreateInboundOrderRequest struct {
 type CreateInboundOrderItem struct {
 	CategoryID  uint    `json:"category_id" binding:"required"`
 	GrossWeight float64 `json:"gross_weight" binding:"required,gt=0"`
-	TareWeight  float64 `json:"tare_weight" binding:"required,gte=0"`
+	TareWeight  float64 `json:"tare_weight"`
 	UnitPrice   float64 `json:"unit_price" binding:"required,gt=0"`
 }
 
